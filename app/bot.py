@@ -62,7 +62,10 @@ class MexcScalperBot:
 
         # Evaluate trade execution for top signals
         pf_summary = paper_engine.get_portfolio_summary()
-        available_slots = pf_summary["max_positions"] - pf_summary["open_positions_count"]
+        available_slots = min(
+            pf_summary["max_positions"] - pf_summary["open_positions_count"],
+            settings.MAX_ENTRIES_PER_SCAN,
+        )
 
         if available_slots > 0 and signals:
             logger.info(f"{available_slots} position slots available. Evaluating top signals...")

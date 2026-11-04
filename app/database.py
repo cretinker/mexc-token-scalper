@@ -258,6 +258,33 @@ class Database:
             c.execute("SELECT * FROM signals ORDER BY timestamp DESC LIMIT ?", (limit,))
             return [dict(r) for r in c.fetchall()]
 
+    # --- Risk telemetry ---
+    def get_realized_pnl_since(self, since_timestamp: float) -> float:
+        """Return realized trade PnL since a UTC epoch timestamp."""
+        with self._get_conn() as conn:
+            row = conn.execute(
+                "SELECT COALESCE(SUM(pnl), 0.0) AS pnl FROM trades WHERE timestamp >= ?",
+                (since_timestamp,),
+            ).fetchone()
+            return float(row["pnl"] if row else 0.0)
+
+    def get_recent_loss_streak(self, limit: int = 20) -> tuple[int, float]:
+        """Return consecutive negative closing/partial trades and latest loss time."""
+        with self._get_conn() as conn:
+            rows = conn.execute(
+                "SELECT pnl, timestamp FROM trades WHERE pnl != 0 ORDER BY timestamp DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        streak = 0
+        latest_loss = 0.0
+        for row in rows:
+            if float(row["pnl"]) >= 0:
+                break
+            if streak == 0:
+                latest_loss = float(row["timestamp"])
+            streak += 1
+        return streak, latest_loss
+
     # --- Cooldown Methods ---
     def set_cooldown(self, symbol: str, duration_seconds: float = 1800.0, reason: str = "STOP_LOSS"):
         """Prevents buying the same symbol immediately after an exit or stop loss."""

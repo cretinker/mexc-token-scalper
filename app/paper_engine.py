@@ -75,8 +75,11 @@ class PaperEngine:
             "max_positions": self.max_positions,
         }
 
-    def can_open_trade(self, symbol: str) -> tuple[bool, str]:
+    def can_open_trade(self, symbol: str, side: str = "LONG") -> tuple[bool, str]:
         """Validates portfolio rules before executing a trade."""
+        side = side.upper()
+        if side == "SHORT" and not settings.ENABLE_SHORTS:
+            return False, "Short trades are disabled for spot execution"
         # 1. Check if symbol is in post-exit cooldown
         in_cooldown, rem_sec = db.is_in_cooldown(symbol)
         if in_cooldown:
@@ -91,6 +94,21 @@ class PaperEngine:
             return False, f"Position for {symbol} is already active"
 
         pf = db.get_portfolio()
+        now = time.time()
+        utc_day_start = now - (now % 86400)
+        daily_pnl = db.get_realized_pnl_since(utc_day_start)
+        daily_loss_limit = pf["starting_equity"] * (settings.DAILY_LOSS_CAP_PCT / 100.0)
+        if daily_pnl <= -daily_loss_limit:
+            return False, f"Daily loss cap reached (${daily_pnl:.2f} <= -${daily_loss_limit:.2f})"
+
+        loss_streak, latest_loss = db.get_recent_loss_streak()
+        if (
+            loss_streak >= settings.MAX_CONSECUTIVE_LOSSES
+            and latest_loss > 0
+            and now - latest_loss < settings.LOSS_PAUSE_MINUTES * 60
+        ):
+            return False, f"Loss-streak pause active ({loss_streak} consecutive losses)"
+
         target_allocation = pf["total_equity"] * (self.alloc_pct / 100.0)
         if pf["cash"] < target_allocation * 0.8:
             return False, f"Insufficient cash (${pf['cash']:.2f}) for trade allocation (${target_allocation:.2f})"
@@ -120,8 +138,8 @@ class PaperEngine:
             return False, "Invalid zero risk range"
 
         rr = potential_gain / potential_risk
-        if rr < 1.25:
-            return False, f"Unfavorable DOM R:R ratio ({rr:.2f} < 1.25)"
+        if rr < 1.50:
+            return False, f"Unfavorable DOM R:R ratio ({rr:.2f} < 1.50)"
 
         # 2. Order Book Imbalance / Overhead Trap Check
         book_ratio = dom_info.get("book_ratio", 1.0)
@@ -175,7 +193,7 @@ class PaperEngine:
         """
         symbol = signal["symbol"]
         side = signal.get("side", "LONG").upper()
-        can_trade, reason = self.can_open_trade(symbol)
+        can_trade, reason = self.can_open_trade(symbol, side)
         if not can_trade:
             logger.info(f"Skipping {side} on {symbol}: {reason}")
             return None
@@ -193,12 +211,6 @@ class PaperEngine:
             return None
 
         # Calculate position size
-        pf = db.get_portfolio()
-        desired_investment = min(pf["cash"] * 0.95, pf["total_equity"] * (self.alloc_pct / 100.0))
-        fee = desired_investment * (self.fee_pct / 100.0)
-        net_investment = desired_investment - fee
-        units = net_investment / fill_price
-
         # Consult DOM Engine for intelligent structural levels (no hardcoded static clamps)
         dom_info = dom_engine.analyze_orderbook(symbol, fill_price, side=side)
 
@@ -237,6 +249,41 @@ class PaperEngine:
             logger.info(f"Entry pre-flight REJECTED {side} on {symbol}: {fail_reason}")
             return None
 
+        if "committee_passed" in signal and not signal["committee_passed"]:
+            logger.info(f"Entry committee REJECTED {side} on {symbol}")
+            return None
+
+        # Size from the planned loss at the actual structural stop, not from a
+        # fixed dollar allocation. This prevents a burst of correlated trades
+        # from turning two small stop-outs into a large hourly drawdown.
+        pf = db.get_portfolio()
+        equity = max(float(pf["total_equity"]), 0.0)
+        stop_pct = abs(fill_price - stop_loss) / fill_price if fill_price > 0 else 1.0
+        open_risk = self._get_open_risk_usd()
+        max_open_risk = equity * (settings.MAX_OPEN_RISK_PCT / 100.0)
+        remaining_risk = max_open_risk - open_risk
+        regime_multiplier = float(signal.get("regime_risk_multiplier", 1.0))
+        per_trade_risk = equity * (settings.PER_TRADE_RISK_PCT / 100.0) * max(0.0, min(1.0, regime_multiplier))
+        risk_budget = min(per_trade_risk, max(0.0, remaining_risk))
+        if stop_pct <= 0 or risk_budget <= 0:
+            return None
+
+        risk_limited_notional = risk_budget / stop_pct
+        desired_investment = min(
+            pf["cash"] * 0.95,
+            equity * (self.alloc_pct / 100.0),
+            risk_limited_notional,
+        )
+        if desired_investment < settings.MIN_TRADE_NOTIONAL_USDT:
+            logger.info(
+                f"Entry risk budget too small for {symbol}: "
+                f"${desired_investment:.2f} < ${settings.MIN_TRADE_NOTIONAL_USDT:.2f}"
+            )
+            return None
+        fee = desired_investment * (self.fee_pct / 100.0)
+        net_investment = desired_investment - fee
+        units = net_investment / fill_price
+
         # Deduct cash from portfolio
         new_cash = pf["cash"] - desired_investment
         db.update_portfolio(
@@ -274,6 +321,17 @@ class PaperEngine:
 
         logger.info(f"ENTERED {side}: {symbol} at ${fill_price:.6f} (${desired_investment:.2f} allocated) | Structural DOM TP1: ${tp1:.6f} (+{tp1_dist_pct:.2f}%) | Structural DOM SL: ${stop_loss:.6f} (-{sl_dist_pct:.2f}%)")
         return pos_id
+
+    def _get_open_risk_usd(self) -> float:
+        """Planned loss at each stored stop for all currently open positions."""
+        total = 0.0
+        for pos in db.get_open_positions():
+            entry = float(pos.get("entry_price", 0.0))
+            stop = float(pos.get("stop_loss", 0.0))
+            invested = float(pos.get("invested_amount", 0.0))
+            if entry > 0 and stop > 0:
+                total += invested * abs(entry - stop) / entry
+        return total
 
     def close_manually(self, pos_id: int) -> bool:
         """Manual close trigger for user control from UI."""

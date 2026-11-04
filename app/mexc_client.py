@@ -19,6 +19,7 @@ class MexcClient:
         self.endpoints = settings.MEXC_FALLBACK_URLS
         self.current_endpoint_idx = 0
         self.timeout = 15.0
+        self._kline_cache: Dict[tuple[str, str, int], tuple[float, List[Dict[str, Any]]]] = {}
 
     @property
     def base_url(self) -> str:
@@ -145,6 +146,13 @@ class MexcClient:
         Endpoint: /api/v3/klines
         Returns parsed list of dicts: [time, open, high, low, close, volume, quote_volume]
         """
+        cache_key = (symbol, interval, limit)
+        cached = self._kline_cache.get(cache_key)
+        # Keep scanner confirmations bounded to one normal scan loop while
+        # avoiding a fresh HTTP client for every candidate on every pass.
+        if cached and time.time() - cached[0] < 30.0:
+            return cached[1]
+
         params: Dict[str, Any] = {"symbol": symbol, "interval": interval, "limit": limit}
         if start_time:
             params["startTime"] = start_time
@@ -173,6 +181,7 @@ class MexcClient:
                 )
             except (IndexError, ValueError, TypeError):
                 continue
+        self._kline_cache[cache_key] = (time.time(), candles)
         return candles
 
 

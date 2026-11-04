@@ -5,6 +5,9 @@ from app.config import settings
 from app.mexc_client import mexc_client
 from app.safety_filter import safety_filter, FilterResult
 from app.database import db
+from app.market_context import build_context
+from app.market_regime import compute_btc_regime, direction_allowed
+from app.committee import evaluate_setup
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +35,21 @@ class MexcScanner:
         # Batch fetch all book tickers once for ultra-fast spread checks
         book_map = mexc_client.fetch_all_book_tickers()
 
-        # Compute benchmark BTC 24h change for Relative Strength (RS) scoring
+        # Compute benchmark BTC 24h change for Relative Strength (RS) scoring.
+        # MEXC already returns percentage points here; do not multiply by 100.
         btc_ticker = next(
             (t for t in tickers if t.get("symbol") in ("BTCUSDT", "BTC_USDT")),
             None
         )
-        btc_change_24h = float(btc_ticker.get("priceChangePercent", 0.0)) * 100.0 if btc_ticker else 0.0
+        btc_change_24h = float(btc_ticker.get("priceChangePercent", 0.0)) if btc_ticker else 0.0
 
-        qualified_signals: List[Dict[str, Any]] = []
+        btc_candles = mexc_client.fetch_klines("BTCUSDT", interval="1h", limit=100)
+        btc_regime = compute_btc_regime(btc_candles)
+        if settings.REQUIRE_BTC_REGIME and btc_regime is None:
+            logger.warning("BTC regime unavailable; standing down rather than trading blind.")
+            return []
+
+        preliminary: List[Dict[str, Any]] = []
 
         # Filter active USDT pairs
         usdt_pairs = [
@@ -54,7 +64,7 @@ class MexcScanner:
             symbol = t["symbol"]
             price = float(t.get("lastPrice", 0.0))
             vol_24h = float(t.get("quoteVolume", 0.0))
-            change_24h = float(t.get("priceChangePercent", 0.0)) * 100.0
+            change_24h = float(t.get("priceChangePercent", 0.0))
 
             # Exclude major anchors/stables and single-letter junk tokens
             base = symbol.replace("USDT", "")
@@ -77,10 +87,10 @@ class MexcScanner:
             is_penny = price <= self.penny_max_price and (8.0 <= change_24h <= 40.0)
 
             # Check Playbook 3: New Listing momentum
-            is_new_listing = change_24h > 15.0 and vol_24h > 150000
+            is_new_listing = settings.ENABLE_NEW_LISTING and change_24h > 15.0 and vol_24h > 150000
 
             # Check Playbook 4: Exhaustion Short (Overextended parabolic pump dropping from 24h peak)
-            is_exhaustion_short = (
+            is_exhaustion_short = settings.ENABLE_SHORTS and (
                 change_24h >= 25.0
                 and vol_24h >= 40000.0
                 and high_24h > 0
@@ -119,8 +129,8 @@ class MexcScanner:
                 book=book_map.get(symbol)
             )
 
-            if filter_res.passed:
-                signal_data = {
+            if filter_res.passed and filter_res.score >= settings.MIN_SIGNAL_SCORE:
+                preliminary.append({
                     "symbol": symbol,
                     "side": side,
                     "play_type": play_type,
@@ -133,17 +143,88 @@ class MexcScanner:
                     "spread_pct": round(filter_res.spread_pct, 2),
                     "reason": "; ".join(filter_res.reasons),
                     "timestamp": time.time(),
-                    "traded": False
-                }
-                qualified_signals.append(signal_data)
-                db.record_signal(signal_data)
-
-        # Sort signals prioritizing positive Relative Strength over BTC and high safety score
-        qualified_signals.sort(
+                    "traded": False,
+                    "filter_result": filter_res,
+                })
+        # Sort cheap candidates first, then spend network calls only on the best
+        # few. This prevents a full-market scan from creating a burst of stale
+        # entries and keeps the 45-second loop bounded.
+        preliminary.sort(
             key=lambda x: (x["rs_score"] > 0, x["score"] + min(x["rs_score"], 50.0), x["spike_multiple"]),
             reverse=True
         )
-        return qualified_signals
+
+        qualified_signals: List[Dict[str, Any]] = []
+        for candidate in preliminary[: settings.MAX_DEEP_CANDIDATES]:
+            symbol = candidate["symbol"]
+            side = candidate["side"]
+            if btc_regime is None:
+                continue
+            if not direction_allowed(
+                side,
+                btc_regime,
+                candidate["rs_score"],
+                settings.MIN_RS_IN_CHOP_PCT,
+            ):
+                continue
+
+            candles = mexc_client.fetch_klines(symbol, interval="15m", limit=80)
+            context = build_context(candles)
+            if context is None:
+                continue
+
+            final_filter = safety_filter.evaluate_ticker(
+                ticker=next((item for item in usdt_pairs if item.get("symbol") == symbol), {}),
+                play_type=candidate["play_type"],
+                volume_mult=candidate["spike_multiple"],
+                recent_1h_change=context.return_1h_pct,
+                book=book_map.get(symbol),
+            )
+            if not final_filter.passed or final_filter.score < settings.MIN_SIGNAL_SCORE:
+                continue
+
+            stop = context.price * (1.0 - settings.STOP_LOSS_PCT / 100.0) if side == "LONG" else context.price * (1.0 + settings.STOP_LOSS_PCT / 100.0)
+            target = context.price * (1.0 + settings.TAKE_PROFIT_1_PCT / 100.0) if side == "LONG" else context.price * (1.0 - settings.TAKE_PROFIT_1_PCT / 100.0)
+            committee = evaluate_setup(
+                symbol=symbol,
+                side=side,
+                context=context,
+                regime=btc_regime,
+                relative_strength=candidate["rs_score"],
+                spread_pct=candidate["spread_pct"],
+                stop_price=stop,
+                target_price=target,
+            )
+            if not committee.passed:
+                continue
+
+            signal_data = {k: v for k, v in candidate.items() if k != "filter_result"}
+            signal_data.update({
+                "score": final_filter.score,
+                "change_24h": round(candidate["change_24h"], 2),
+                "recent_1h_change": round(context.return_1h_pct, 2),
+                "trend": context.trend,
+                "rsi14": round(context.rsi14, 2),
+                "volume_ratio": round(context.volume_ratio, 2),
+                "btc_regime": btc_regime.bias if btc_regime else "UNKNOWN",
+                "regime_risk_multiplier": btc_regime.risk_budget_pct,
+                "committee_action": committee.action,
+                "committee_margin": committee.margin_of_safety,
+                "committee_passed": True,
+                "reason": "; ".join([
+                    *final_filter.reasons,
+                    *(btc_regime.reasons if btc_regime else []),
+                    committee.reason(),
+                ]),
+            })
+            qualified_signals.append(signal_data)
+            db.record_signal(signal_data)
+
+        qualified_signals.sort(
+            key=lambda x: (x["committee_margin"], x["score"], x["rs_score"]),
+            reverse=True,
+        )
+        return qualified_signals[: settings.MAX_ENTRIES_PER_SCAN * 2]
 
     def _estimate_volume_spike_multiple(self, symbol: str, current_vol_24h: float) -> float:
         """

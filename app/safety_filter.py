@@ -69,7 +69,9 @@ class SafetyFilter:
             score -= 10
 
         # 4. Anti-Top Chasing (Parabolic Exhaustion Filter)
-        change_24h = float(ticker.get("priceChangePercent", 0.0)) * 100.0
+        # MEXC's Binance-compatible ticker already reports a percentage
+        # (e.g. 12.5 means +12.5%), not a decimal return.
+        change_24h = float(ticker.get("priceChangePercent", 0.0))
         if change_24h > 300.0:
             reject_reasons.append(f"Extreme 24h pump (+{change_24h:.1f}%): High risk of dump exhaustion")
         elif change_24h > 150.0:
@@ -78,8 +80,8 @@ class SafetyFilter:
             score += 10
             positive_factors.append(f"Healthy early momentum (+{change_24h:.1f}%)")
 
-        if recent_1h_change is not None and recent_1h_change > self.max_1h_pct:
-            reject_reasons.append(f"Parabolic 1h candle (+{recent_1h_change:.1f}%): Anti-chase triggered")
+        if recent_1h_change is not None and abs(recent_1h_change) > self.max_1h_pct:
+            reject_reasons.append(f"Extreme 1h move ({recent_1h_change:+.1f}%): Anti-chase triggered")
 
         # 5. Playbook Specific Scoring
         if play_type == "SLEEPER_REVIVAL":
