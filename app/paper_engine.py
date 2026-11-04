@@ -128,32 +128,36 @@ class PaperEngine:
         net_investment = desired_investment - fee
         units = net_investment / fill_price
 
-        # Consult DOM Engine for dynamic levels
+        # Consult DOM Engine for intelligent structural levels (no hardcoded static clamps)
         dom_info = dom_engine.analyze_orderbook(symbol, fill_price, side=side)
 
-        if side == "SHORT":
-            # For SHORT: TP is below, SL is above
-            default_tp1 = fill_price * (1.0 - settings.TAKE_PROFIT_1_PCT / 100.0)
-            default_tp2 = fill_price * (1.0 - settings.TAKE_PROFIT_2_PCT / 100.0)
-            default_sl = fill_price * (1.0 + settings.STOP_LOSS_PCT / 100.0)
+        tp1 = dom_info.get("dynamic_tp")
+        tp2 = dom_info.get("dynamic_tp2")
+        stop_loss = dom_info.get("dynamic_sl")
 
-            # Snap TP1 to DOM Bid Wall if available
-            tp1 = max(default_tp1, dom_info.get("dynamic_tp") or default_tp1)
-            tp2 = default_tp2
-            # Snap SL to DOM Ask Wall if available
-            stop_loss = min(default_sl, dom_info.get("dynamic_sl") or default_sl)
+        if side == "SHORT":
+            # For SHORT: Take profit below, stop loss above
+            if not tp1 or tp1 >= fill_price:
+                tp1 = fill_price * 0.955
+            if not tp2 or tp2 >= tp1:
+                tp2 = tp1 * 0.92
+            if not stop_loss or stop_loss <= fill_price:
+                stop_loss = fill_price * 1.028
+
+            tp1_dist_pct = ((fill_price - tp1) / fill_price) * 100.0
+            sl_dist_pct = ((stop_loss - fill_price) / fill_price) * 100.0
             trade_action = "SELL_SHORT"
         else:
-            # For LONG: TP is above, SL is below
-            default_tp1 = fill_price * (1.0 + settings.TAKE_PROFIT_1_PCT / 100.0)
-            default_tp2 = fill_price * (1.0 + settings.TAKE_PROFIT_2_PCT / 100.0)
-            default_sl = fill_price * (1.0 - settings.STOP_LOSS_PCT / 100.0)
+            # For LONG: Take profit above, stop loss below
+            if not tp1 or tp1 <= fill_price:
+                tp1 = fill_price * 1.045
+            if not tp2 or tp2 <= tp1:
+                tp2 = tp1 * 1.08
+            if not stop_loss or stop_loss >= fill_price:
+                stop_loss = fill_price * 0.972
 
-            # Snap TP1 to DOM Ask Wall if available
-            tp1 = min(default_tp1, dom_info.get("dynamic_tp") or default_tp1)
-            tp2 = default_tp2
-            # Snap SL to DOM Bid Wall if available
-            stop_loss = max(default_sl, dom_info.get("dynamic_sl") or default_sl)
+            tp1_dist_pct = ((tp1 - fill_price) / fill_price) * 100.0
+            sl_dist_pct = ((fill_price - stop_loss) / fill_price) * 100.0
             trade_action = "BUY"
 
         # Deduct cash from portfolio
@@ -191,7 +195,7 @@ class PaperEngine:
             "reason": f"Signal {signal.get('play_type')} (Score {signal.get('score')})"
         })
 
-        logger.info(f"ENTERED {side}: {symbol} at ${fill_price:.6f} (${desired_investment:.2f} allocated, TP1: ${tp1:.6f}, SL: ${stop_loss:.6f})")
+        logger.info(f"ENTERED {side}: {symbol} at ${fill_price:.6f} (${desired_investment:.2f} allocated) | Structural DOM TP1: ${tp1:.6f} (+{tp1_dist_pct:.2f}%) | Structural DOM SL: ${stop_loss:.6f} (-{sl_dist_pct:.2f}%)")
         return pos_id
 
     def close_manually(self, pos_id: int) -> bool:
