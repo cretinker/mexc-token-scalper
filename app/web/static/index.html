@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEXC Penny Scalper & Revival Radar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090a0f;
+      --card-bg: #11131a;
+      --card-border: #1e222d;
+      --accent: #2962ff;
+      --accent-glow: rgba(41, 98, 255, 0.15);
+      --green: #00e676;
+      --green-glow: rgba(0, 230, 118, 0.12);
+      --red: #ff3d71;
+      --red-glow: rgba(255, 61, 113, 0.12);
+      --yellow: #ffab00;
+      --text: #e0e6ed;
+      --text-muted: #8492a6;
+      --text-dim: #475569;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 24px;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 24px;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-live {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(0, 230, 118, 0.1);
+      color: var(--green);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+    button:hover { background: #1e4bd8; }
+    button:active { transform: scale(0.98); }
+    button.btn-secondary {
+      background: #1c212d;
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+    button.btn-secondary:hover { background: #252c3c; }
+
+    /* KPIs Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .val-green { color: var(--green); }
+    .val-red { color: var(--red); }
+
+    /* Main Grid Layout */
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .layout-grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #131620;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      max-height: 480px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th {
+      padding: 10px 14px;
+      background: #0d0f15;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--card-border);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #171b26;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    tr:hover td {
+      background: #141722;
+    }
+
+    .tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      display: inline-block;
+    }
+    .tag-sleeper { background: rgba(255, 171, 0, 0.15); color: var(--yellow); border: 1px solid rgba(255, 171, 0, 0.3); }
+    .tag-penny { background: rgba(0, 230, 118, 0.15); color: var(--green); border: 1px solid rgba(0, 230, 118, 0.3); }
+    .tag-listing { background: rgba(41, 98, 255, 0.15); color: #64b5f6; border: 1px solid rgba(41, 98, 255, 0.3); }
+
+    .btn-close-sm {
+      background: #2a1b24;
+      color: var(--red);
+      border: 1px solid rgba(255, 61, 113, 0.3);
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-close-sm:hover { background: #3d1f30; }
+
+    .empty-state {
+      padding: 36px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand-title">
+        <span>MEXC PENNY SCALPER & REVIVAL RADAR</span>
+        <span class="badge-live">Live Feed Active</span>
+      </div>
+      <div class="header-actions">
+        <button id="scan-btn" onclick="triggerScan()">Run Market Scan</button>
+        <button class="btn-secondary" onclick="resetWallet()">Reset Wallet</button>
+      </div>
+    </header>
+
+    <!-- Top Portfolio KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Equity</div>
+        <div class="kpi-value" id="kpi-equity">$1,000.00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Available Cash</div>
+        <div class="kpi-value" id="kpi-cash">$1,000.00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Unrealized PnL</div>
+        <div class="kpi-value" id="kpi-unrealized">$0.00 (0.0%)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Realized Net PnL</div>
+        <div class="kpi-value" id="kpi-realized">$0.00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-value" id="kpi-winrate">0.0% (0/0)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Active Positions</div>
+        <div class="kpi-value" id="kpi-positions">0 / 5</div>
+      </div>
+    </div>
+
+    <!-- Active Positions & Live Radar Signals -->
+    <div class="layout-grid">
+      <!-- Active Paper Positions -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Active Positions & Stepped Exits</div>
+          <span style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Target: TP1 +10% | TP2 +25% | SL -6.0%</span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Play</th>
+                <th>Entry</th>
+                <th>Current</th>
+                <th>PnL %</th>
+                <th>Value</th>
+                <th>Stop Level</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="positions-body">
+              <tr>
+                <td colspan="8" class="empty-state">No open positions. Scanner is evaluating market signals...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Real-time Market Signals -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Live MEXC Signals & Revival Radar</div>
+          <span style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;" id="signal-count">0 Signals</span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Setup</th>
+                <th>Score</th>
+                <th>Price</th>
+                <th>24h Chg</th>
+                <th>Volume</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="signals-body">
+              <tr>
+                <td colspan="7" class="empty-state">Waiting for next scan cycle...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Executed Trades Log -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Execution Log & Completed Fills</div>
+        <span style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Full SQLite Trade Ledger</span>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Symbol</th>
+              <th>Action</th>
+              <th>Execution Price</th>
+              <th>Units</th>
+              <th>Notional</th>
+              <th>Fee</th>
+              <th>Realized PnL</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="trades-body">
+            <tr>
+              <td colspan="9" class="empty-state">No executed trades logged yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        renderDashboard(data);
+      } catch (err) {
+        console.error('Failed to fetch status:', err);
+      }
+    }
+
+    function renderDashboard(data) {
+      const pf = data.portfolio;
+      document.getElementById('kpi-equity').innerText = `$${pf.total_equity.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+      document.getElementById('kpi-cash').innerText = `$${pf.cash.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+
+      const unElem = document.getElementById('kpi-unrealized');
+      const unSign = pf.unrealized_pnl >= 0 ? '+' : '';
+      unElem.innerText = `${unSign}$${pf.unrealized_pnl.toFixed(2)} (${pf.roi_pct.toFixed(1)}%)`;
+      unElem.className = `kpi-value ${pf.unrealized_pnl >= 0 ? 'val-green' : 'val-red'}`;
+
+      const rzElem = document.getElementById('kpi-realized');
+      const rzSign = pf.realized_pnl >= 0 ? '+' : '';
+      rzElem.innerText = `${rzSign}$${pf.realized_pnl.toFixed(2)}`;
+      rzElem.className = `kpi-value ${pf.realized_pnl >= 0 ? 'val-green' : 'val-red'}`;
+
+      document.getElementById('kpi-winrate').innerText = `${pf.win_rate.toFixed(1)}% (${pf.win_count}W / ${pf.loss_count}L)`;
+      document.getElementById('kpi-positions').innerText = `${pf.open_positions_count} / ${pf.max_positions}`;
+
+      // Render Positions
+      const posBody = document.getElementById('positions-body');
+      if (data.open_positions.length === 0) {
+        posBody.innerHTML = '<tr><td colspan="8" class="empty-state">No open positions. Scanner is evaluating market signals...</td></tr>';
+      } else {
+        posBody.innerHTML = data.open_positions.map(p => {
+          const pnlClass = p.pnl_pct >= 0 ? 'val-green' : 'val-red';
+          const pnlSign = p.pnl_pct >= 0 ? '+' : '';
+          const tagClass = p.play_type === 'SLEEPER_REVIVAL' ? 'tag-sleeper' : (p.play_type === 'PENNY_MOMENTUM' ? 'tag-penny' : 'tag-listing');
+          return `
+            <tr>
+              <td><strong>${p.symbol}</strong></td>
+              <td><span class="tag ${tagClass}">${p.play_type}</span></td>
+              <td>$${p.entry_price < 0.01 ? p.entry_price.toFixed(7) : p.entry_price.toFixed(4)}</td>
+              <td>$${p.current_price < 0.01 ? p.current_price.toFixed(7) : p.current_price.toFixed(4)}</td>
+              <td class="${pnlClass}">${pnlSign}${p.pnl_pct.toFixed(2)}%</td>
+              <td>$${p.current_value.toFixed(2)}</td>
+              <td>$${p.stop_loss < 0.01 ? p.stop_loss.toFixed(7) : p.stop_loss.toFixed(4)}</td>
+              <td><button class="btn-close-sm" onclick="closePosition(${p.id})">Close</button></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Render Signals
+      const sigBody = document.getElementById('signals-body');
+      document.getElementById('signal-count').innerText = `${data.signals.length} Signals`;
+      if (data.signals.length === 0) {
+        sigBody.innerHTML = '<tr><td colspan="7" class="empty-state">Waiting for next scan cycle...</td></tr>';
+      } else {
+        sigBody.innerHTML = data.signals.map(s => {
+          const tagClass = s.play_type === 'SLEEPER_REVIVAL' ? 'tag-sleeper' : (s.play_type === 'PENNY_MOMENTUM' ? 'tag-penny' : 'tag-listing');
+          return `
+            <tr>
+              <td><strong>${s.symbol}</strong></td>
+              <td><span class="tag ${tagClass}">${s.play_type}</span></td>
+              <td><strong>${s.score}</strong></td>
+              <td>$${s.price < 0.01 ? s.price.toFixed(7) : s.price.toFixed(4)}</td>
+              <td class="${s.change_24h >= 0 ? 'val-green' : 'val-red'}">${s.change_24h >= 0 ? '+' : ''}${s.change_24h.toFixed(1)}%</td>
+              <td>$${Math.round(s.volume_24h).toLocaleString()}</td>
+              <td>${s.traded ? '<span class="tag tag-penny">Traded</span>' : '<span style="color:var(--text-dim)">Qualified</span>'}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Render Trades
+      const tradeBody = document.getElementById('trades-body');
+      if (data.trades.length === 0) {
+        tradeBody.innerHTML = '<tr><td colspan="9" class="empty-state">No executed trades logged yet.</td></tr>';
+      } else {
+        tradeBody.innerHTML = data.trades.map(t => {
+          const date = new Date(t.timestamp * 1000).toLocaleTimeString();
+          const pnlClass = t.pnl >= 0 ? 'val-green' : 'val-red';
+          const pnlText = t.side.startsWith('SELL') ? `${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)} (${t.pnl_pct.toFixed(1)}%)` : '--';
+          return `
+            <tr>
+              <td style="color:var(--text-muted)">${date}</td>
+              <td><strong>${t.symbol}</strong></td>
+              <td><span class="tag ${t.side === 'BUY' ? 'tag-listing' : 'tag-sleeper'}">${t.side}</span></td>
+              <td>$${t.price < 0.01 ? t.price.toFixed(7) : t.price.toFixed(4)}</td>
+              <td>${Math.round(t.units).toLocaleString()}</td>
+              <td>$${t.notional.toFixed(2)}</td>
+              <td>$${t.fee.toFixed(3)}</td>
+              <td class="${pnlClass}">${pnlText}</td>
+              <td style="color:var(--text-muted)">${t.reason}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    async function triggerScan() {
+      const btn = document.getElementById('scan-btn');
+      btn.innerText = 'Scanning...';
+      btn.disabled = true;
+      try {
+        await fetch('/api/scan', { method: 'POST' });
+        await fetchStatus();
+      } finally {
+        btn.innerText = 'Run Market Scan';
+        btn.disabled = false;
+      }
+    }
+
+    async function closePosition(posId) {
+      if (confirm(`Close position #${posId} at market price?`)) {
+        await fetch(`/api/trade/close/${posId}`, { method: 'POST' });
+        await fetchStatus();
+      }
+    }
+
+    async function resetWallet() {
+      if (confirm('Reset paper wallet balance back to $1,000.00 USDT?')) {
+        await fetch('/api/portfolio/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ starting_equity: 1000.0 })
+        });
+        await fetchStatus();
+      }
+    }
+
+    // Auto-refresh every 3.5 seconds
+    setInterval(fetchStatus, 3500);
+    fetchStatus();
+  </script>
+</body>
+</html>

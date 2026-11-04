@@ -1,0 +1,136 @@
+{
+  "starting_equity": 1000.0,
+  "final_equity": 10924.14,
+  "net_profit": 9924.14,
+  "roi_pct": 992.4,
+  "profit_factor": 4.19,
+  "max_drawdown_pct": 27.71,
+  "total_trades": 538,
+  "win_count": 105,
+  "loss_count": 433,
+  "win_rate": 19.5,
+  "gross_profit": 15204.53,
+  "gross_loss": 3628.41,
+  "avg_win_pct": 24.5,
+  "avg_loss_pct": -1.9,
+  "by_playbook": {
+    "SLEEPER_REVIVAL": {
+      "trades": 284,
+      "wins": 55,
+      "losses": 227,
+      "win_rate": 19.7,
+      "net_pnl": 5408.66,
+      "profit_factor": 4.31
+    },
+    "PENNY_MOMENTUM": {
+      "trades": 195,
+      "wins": 38,
+      "losses": 158,
+      "win_rate": 19.4,
+      "net_pnl": 3632.24,
+      "profit_factor": 4.12
+    },
+    "NEW_LISTING": {
+      "trades": 59,
+      "wins": 12,
+      "losses": 48,
+      "win_rate": 19.0,
+      "net_pnl": 883.25,
+      "profit_factor": 3.98
+    }
+  },
+  "best_5_trades": [
+    {
+      "symbol": "BSV_USDT",
+      "play_type": "PENNY_MOMENTUM",
+      "entry_time": "2026-09-18 03:00",
+      "exit_time": "2026-09-22 14:15",
+      "pnl": 1579.99,
+      "pnl_pct": 85.4,
+      "reason": "EXIT"
+    },
+    {
+      "symbol": "NIL_USDT",
+      "play_type": "PENNY_MOMENTUM",
+      "entry_time": "2026-09-18 03:00",
+      "exit_time": "2026-09-22 14:15",
+      "pnl": 1050.93,
+      "pnl_pct": 85.4,
+      "reason": "EXIT"
+    },
+    {
+      "symbol": "ZEC_USDT",
+      "play_type": "PENNY_MOMENTUM",
+      "entry_time": "2026-09-18 03:00",
+      "exit_time": "2026-09-22 14:15",
+      "pnl": 853.03,
+      "pnl_pct": 85.4,
+      "reason": "STOP"
+    },
+    {
+      "symbol": "AKE_USDT",
+      "play_type": "PENNY_MOMENTUM",
+      "entry_time": "2026-09-18 03:00",
+      "exit_time": "2026-09-22 14:15",
+      "pnl": 779.34,
+      "pnl_pct": 85.4,
+      "reason": "STOP"
+    },
+    {
+      "symbol": "MUBARAK_USDT",
+      "play_type": "SLEEPER_REVIVAL",
+      "entry_time": "2026-09-18 03:00",
+      "exit_time": "2026-09-22 14:15",
+      "pnl": 700.06,
+      "pnl_pct": 85.4,
+      "reason": "STOP"
+    }
+  ],
+  "worst_5_trades": [
+    {
+      "symbol": "XMR_USDT",
+      "play_type": "PENNY_MOMENTUM",
+      "entry_time": "2026-07-15 11:30",
+      "exit_time": "2026-07-15 13:45",
+      "pnl": -90.61,
+      "pnl_pct": -2.1,
+      "reason": "STOP"
+    },
+    {
+      "symbol": "DASH_USDT",
+      "play_type": "PENNY_MOMENTUM",
+      "entry_time": "2026-07-15 11:30",
+      "exit_time": "2026-07-15 13:45",
+      "pnl": -93.66,
+      "pnl_pct": -2.1,
+      "reason": "STOP"
+    },
+    {
+      "symbol": "XMR_USDT",
+      "play_type": "PENNY_MOMENTUM",
+      "entry_time": "2026-07-15 11:30",
+      "exit_time": "2026-07-15 13:45",
+      "pnl": -98.54,
+      "pnl_pct": -2.1,
+      "reason": "STOP"
+    },
+    {
+      "symbol": "AKE_USDT",
+      "play_type": "PENNY_MOMENTUM",
+      "entry_time": "2026-07-15 11:30",
+      "exit_time": "2026-07-15 13:45",
+      "pnl": -131.79,
+      "pnl_pct": -2.1,
+      "reason": "STOP"
+    },
+    {
+      "symbol": "TIA_USDT",
+      "play_type": "PENNY_MOMENTUM",
+      "entry_time": "2026-07-15 11:30",
+      "exit_time": "2026-07-15 13:45",
+      "pnl": -169.17,
+      "pnl_pct": -2.1,
+      "reason": "STOP"
+    }
+  ]
+}
