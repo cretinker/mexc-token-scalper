@@ -97,6 +97,77 @@ class PaperEngine:
 
         return True, "Approved"
 
+    def validate_entry_preflight(
+        self,
+        symbol: str,
+        side: str,
+        fill_price: float,
+        dom_info: Dict[str, Any],
+        tp1: float,
+        stop_loss: float
+    ) -> tuple[bool, str]:
+        """
+        Hardens entry criteria against traps:
+          1. Enforces minimum 1.25 Risk/Reward ratio based on structural DOM targets.
+          2. Rejects entry if order book ratio is adverse (< 0.65 for Long, > 1.5 for Short).
+          3. Rejects Long if a massive Ask Wall is within 1.1% of entry.
+          4. Validates 15m micro-candle momentum (rejects buying falling knives or shorting vertical rockets).
+        """
+        # 1. Structural Risk-to-Reward Ratio
+        potential_gain = abs(tp1 - fill_price)
+        potential_risk = abs(fill_price - stop_loss)
+        if potential_risk <= 0:
+            return False, "Invalid zero risk range"
+
+        rr = potential_gain / potential_risk
+        if rr < 1.25:
+            return False, f"Unfavorable DOM R:R ratio ({rr:.2f} < 1.25)"
+
+        # 2. Order Book Imbalance / Overhead Trap Check
+        book_ratio = dom_info.get("book_ratio", 1.0)
+        if side == "LONG":
+            if book_ratio < 0.65:
+                return False, f"Adverse order book pressure (bids < 65% of asks: {book_ratio:.2f})"
+
+            ask_walls = dom_info.get("ask_walls", [])
+            for w in ask_walls:
+                if w["distance_pct"] < 1.1:
+                    return False, f"Overhead Ask Wall too close (+{w['distance_pct']}%, ${w['notional']:,.0f})"
+
+        elif side == "SHORT":
+            if book_ratio > 1.5:
+                return False, f"Heavy buyer order book pressure (bids > 150% of asks: {book_ratio:.2f})"
+
+            bid_walls = dom_info.get("bid_walls", [])
+            for w in bid_walls:
+                if w["distance_pct"] < 1.1:
+                    return False, f"Underlying Bid Wall too close (-{w['distance_pct']}%, ${w['notional']:,.0f})"
+
+        # 3. Micro-Candle Trend & Momentum Alignment
+        try:
+            klines = mexc_client.fetch_klines(symbol, interval="15m", limit=5)
+            if len(klines) >= 3:
+                last_candle = klines[-1]
+                candle_return = (last_candle["close"] - last_candle["open"]) / last_candle["open"] if last_candle["open"] > 0 else 0.0
+
+                if side == "LONG":
+                    # Reject if the current 15m candle is a severe red dump candle (> -3.5%)
+                    if candle_return < -0.035:
+                        return False, f"Rejecting falling knife (current 15m candle is {candle_return*100:.1f}%)"
+                    # Reject if price broke below recent 3-candle support
+                    low_3 = min(c["low"] for c in klines[-3:])
+                    if fill_price < low_3 * 0.995:
+                        return False, "Price breaking below 3-candle support"
+
+                elif side == "SHORT":
+                    # Reject shorting into an active vertical pump candle (> +4.0%)
+                    if candle_return > 0.040:
+                        return False, f"Rejecting short into active vertical pump candle (+{candle_return*100:.1f}%)"
+        except Exception as e:
+            logger.warning(f"Kline validation error on {symbol}: {e}")
+
+        return True, "Pre-flight approved"
+
     def execute_buy(self, signal: Dict[str, Any]) -> Optional[int]:
         """
         Executes a paper order (LONG or SHORT) based on a detected signal.
@@ -159,6 +230,12 @@ class PaperEngine:
             tp1_dist_pct = ((tp1 - fill_price) / fill_price) * 100.0
             sl_dist_pct = ((fill_price - stop_loss) / fill_price) * 100.0
             trade_action = "BUY"
+
+        # --- Hardened Entry Pre-Flight Check ---
+        passed, fail_reason = self.validate_entry_preflight(symbol, side, fill_price, dom_info, tp1, stop_loss)
+        if not passed:
+            logger.info(f"Entry pre-flight REJECTED {side} on {symbol}: {fail_reason}")
+            return None
 
         # Deduct cash from portfolio
         new_cash = pf["cash"] - desired_investment

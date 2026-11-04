@@ -26,7 +26,7 @@ class Settings(BaseModel):
 
     # Penny Token Thresholds
     PENNY_MAX_PRICE: float = 0.05          # Price under $0.05
-    MIN_24H_TURNOVER_USDT: float = 5000.0  # At least $5,000 24h volume (captures micro-cap breakouts)
+    MIN_24H_TURNOVER_USDT: float = 20000.0 # At least $20,000 24h volume (captures liquid micro-cap breakouts)
     MAX_SPREAD_PCT: float = 2.5            # Max 2.5% bid-ask spread
     ANTI_CHASE_MAX_1H_PCT: float = 65.0    # Reject if already +65% in 1 hour (anti-top chasing)
 

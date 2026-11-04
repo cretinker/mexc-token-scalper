@@ -67,7 +67,7 @@ class MexcScalperBot:
         if available_slots > 0 and signals:
             logger.info(f"{available_slots} position slots available. Evaluating top signals...")
             for sig in signals[:available_slots]:
-                if sig.get("score", 0) >= 65:
+                if sig.get("score", 0) >= 75:
                     pos_id = paper_engine.execute_buy(sig)
                     if pos_id:
                         sig["traded"] = True
