@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 import uvicorn
@@ -21,7 +22,7 @@ async def start_background_bot():
 
 
 if __name__ == "__main__":
-    port = 8080
+    port = int(os.environ.get("PORT", 8080))
     print(f"""
 ====================================================================
            MEXC PENNY TOKEN SCALPER & REVIVAL RADAR
@@ -29,7 +30,7 @@ if __name__ == "__main__":
   Status: Paper Trading Engine Online (Live MEXC Market Feed)
   Dashboard URL: http://localhost:{port}
   Mirror Routing: api.mexc.co <-> api.mexc.io <-> api.mexc.com
-  Stepped Exits: TP1 (+18%) | TP2 (+45%) | Moonbag Trailing Stop
+  Stepped Exits: TP1 (+3.5%) | TP2 (+15.0%) | Trailing Moonbag (8.0%)
 ====================================================================
 """)
     uvicorn.run("run_server:app", host="0.0.0.0", port=port, reload=False)
