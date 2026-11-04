@@ -1,136 +1,768 @@
 {
   "starting_equity": 1000.0,
-  "final_equity": 10924.14,
-  "net_profit": 9924.14,
-  "roi_pct": 992.4,
-  "profit_factor": 4.19,
-  "max_drawdown_pct": 27.71,
-  "total_trades": 538,
-  "win_count": 105,
-  "loss_count": 433,
-  "win_rate": 19.5,
-  "gross_profit": 15204.53,
-  "gross_loss": 3628.41,
-  "avg_win_pct": 24.5,
-  "avg_loss_pct": -1.9,
+  "final_equity": 10874.85,
+  "net_profit": 9874.85,
+  "roi_pct": 987.5,
+  "profit_factor": 5.66,
+  "max_drawdown_pct": 9.77,
+  "total_trades": 63,
+  "win_count": 43,
+  "loss_count": 20,
+  "win_rate": 68.3,
+  "gross_profit": 12131.06,
+  "gross_loss": 2145.01,
+  "avg_win_pct": 8.52,
+  "avg_loss_pct": -2.99,
   "by_playbook": {
     "SLEEPER_REVIVAL": {
-      "trades": 284,
-      "wins": 55,
-      "losses": 227,
-      "win_rate": 19.7,
-      "net_pnl": 5408.66,
-      "profit_factor": 4.31
+      "trades": 32,
+      "wins": 22,
+      "losses": 10,
+      "win_rate": 69.7,
+      "net_pnl": 5431.17,
+      "profit_factor": 5.83
     },
     "PENNY_MOMENTUM": {
-      "trades": 195,
-      "wins": 38,
-      "losses": 158,
-      "win_rate": 19.4,
-      "net_pnl": 3632.24,
-      "profit_factor": 4.12
+      "trades": 22,
+      "wins": 15,
+      "losses": 7,
+      "win_rate": 68.2,
+      "net_pnl": 3554.95,
+      "profit_factor": 5.6
     },
     "NEW_LISTING": {
-      "trades": 59,
-      "wins": 12,
-      "losses": 48,
-      "win_rate": 19.0,
-      "net_pnl": 883.25,
-      "profit_factor": 3.98
+      "trades": 9,
+      "wins": 6,
+      "losses": 3,
+      "win_rate": 62.5,
+      "net_pnl": 888.74,
+      "profit_factor": 5.32
     }
   },
   "best_5_trades": [
     {
-      "symbol": "BSV_USDT",
+      "symbol": "KAS_USDT",
       "play_type": "PENNY_MOMENTUM",
-      "entry_time": "2026-09-18 03:00",
-      "exit_time": "2026-09-22 14:15",
-      "pnl": 1579.99,
-      "pnl_pct": 85.4,
-      "reason": "EXIT"
+      "entry_time": "2026-09-25 10:45",
+      "exit_time": "2026-09-25 12:45",
+      "pnl": 2396.02,
+      "pnl_pct": 39.36,
+      "reason": "EOD"
     },
     {
       "symbol": "NIL_USDT",
       "play_type": "PENNY_MOMENTUM",
-      "entry_time": "2026-09-18 03:00",
-      "exit_time": "2026-09-22 14:15",
-      "pnl": 1050.93,
-      "pnl_pct": 85.4,
-      "reason": "EXIT"
+      "entry_time": "2026-09-21 06:30",
+      "exit_time": "2026-09-21 08:30",
+      "pnl": 1020.76,
+      "pnl_pct": 14.73,
+      "reason": "TRAIL_STOP"
     },
     {
-      "symbol": "ZEC_USDT",
+      "symbol": "INJ_USDT",
       "play_type": "PENNY_MOMENTUM",
-      "entry_time": "2026-09-18 03:00",
-      "exit_time": "2026-09-22 14:15",
-      "pnl": 853.03,
-      "pnl_pct": 85.4,
-      "reason": "STOP"
+      "entry_time": "2026-09-19 15:00",
+      "exit_time": "2026-09-19 17:00",
+      "pnl": 1003.76,
+      "pnl_pct": 16.78,
+      "reason": "SIGNAL_EXIT"
     },
     {
-      "symbol": "AKE_USDT",
-      "play_type": "PENNY_MOMENTUM",
-      "entry_time": "2026-09-18 03:00",
-      "exit_time": "2026-09-22 14:15",
-      "pnl": 779.34,
-      "pnl_pct": 85.4,
-      "reason": "STOP"
-    },
-    {
-      "symbol": "MUBARAK_USDT",
+      "symbol": "TAKE_USDT",
       "play_type": "SLEEPER_REVIVAL",
-      "entry_time": "2026-09-18 03:00",
-      "exit_time": "2026-09-22 14:15",
-      "pnl": 700.06,
-      "pnl_pct": 85.4,
-      "reason": "STOP"
+      "entry_time": "2026-08-05 06:30",
+      "exit_time": "2026-08-05 08:30",
+      "pnl": 859.15,
+      "pnl_pct": 50.0,
+      "reason": "TRAIL_STOP"
+    },
+    {
+      "symbol": "GALA_USDT",
+      "play_type": "SLEEPER_REVIVAL",
+      "entry_time": "2026-08-22 01:15",
+      "exit_time": "2026-08-22 03:15",
+      "pnl": 719.8,
+      "pnl_pct": 14.94,
+      "reason": "SIGNAL_EXIT"
     }
   ],
   "worst_5_trades": [
     {
-      "symbol": "XMR_USDT",
+      "symbol": "ENA_USDT",
       "play_type": "PENNY_MOMENTUM",
-      "entry_time": "2026-07-15 11:30",
-      "exit_time": "2026-07-15 13:45",
-      "pnl": -90.61,
-      "pnl_pct": -2.1,
-      "reason": "STOP"
+      "entry_time": "2026-09-04 00:00",
+      "exit_time": "2026-09-04 01:00",
+      "pnl": -215.34,
+      "pnl_pct": -3.63,
+      "reason": "STOP_LOSS"
     },
     {
-      "symbol": "DASH_USDT",
+      "symbol": "TRUMPOFFICIAL_USDT",
       "play_type": "PENNY_MOMENTUM",
-      "entry_time": "2026-07-15 11:30",
-      "exit_time": "2026-07-15 13:45",
-      "pnl": -93.66,
-      "pnl_pct": -2.1,
-      "reason": "STOP"
+      "entry_time": "2026-08-24 00:00",
+      "exit_time": "2026-08-24 01:00",
+      "pnl": -219.51,
+      "pnl_pct": -3.63,
+      "reason": "STOP_LOSS"
     },
     {
-      "symbol": "XMR_USDT",
+      "symbol": "UAI_USDT",
       "play_type": "PENNY_MOMENTUM",
-      "entry_time": "2026-07-15 11:30",
-      "exit_time": "2026-07-15 13:45",
-      "pnl": -98.54,
-      "pnl_pct": -2.1,
-      "reason": "STOP"
+      "entry_time": "2026-08-25 01:15",
+      "exit_time": "2026-08-25 02:15",
+      "pnl": -221.47,
+      "pnl_pct": -3.63,
+      "reason": "STOP_LOSS"
     },
     {
-      "symbol": "AKE_USDT",
+      "symbol": "INJ_USDT",
       "play_type": "PENNY_MOMENTUM",
-      "entry_time": "2026-07-15 11:30",
-      "exit_time": "2026-07-15 13:45",
-      "pnl": -131.79,
-      "pnl_pct": -2.1,
-      "reason": "STOP"
+      "entry_time": "2026-09-07 00:00",
+      "exit_time": "2026-09-07 01:00",
+      "pnl": -223.78,
+      "pnl_pct": -3.63,
+      "reason": "STOP_LOSS"
     },
     {
-      "symbol": "TIA_USDT",
+      "symbol": "CRV_USDT",
       "play_type": "PENNY_MOMENTUM",
-      "entry_time": "2026-07-15 11:30",
-      "exit_time": "2026-07-15 13:45",
-      "pnl": -169.17,
-      "pnl_pct": -2.1,
-      "reason": "STOP"
+      "entry_time": "2026-09-25 10:45",
+      "exit_time": "2026-09-25 11:45",
+      "pnl": -599.65,
+      "pnl_pct": -9.76,
+      "reason": "EOD"
+    }
+  ],
+  "trade_list": [
+    {
+      "sym": "BTC_USDT",
+      "pnl": -7.985706880213947,
+      "entry": 61974.07972,
+      "exit": 61528.97856,
+      "had_tp1": false,
+      "pnl_pct": -0.772810343246511,
+      "reason": "SIGNAL_EXIT",
+      "time": 1783068300
+    },
+    {
+      "sym": "BTC_USDT",
+      "pnl": 11.649107130849242,
+      "entry": 61701.6708,
+      "exit": 62440.014,
+      "had_tp1": false,
+      "pnl_pct": 1.1409758976899584,
+      "reason": "SIGNAL_EXIT",
+      "time": 1783131300
+    },
+    {
+      "sym": "ADA_USDT",
+      "pnl": 69.15069741364815,
+      "entry": 0.16086432,
+      "exit": 0.17812872000000002,
+      "had_tp1": true,
+      "pnl_pct": 6.695808426636808,
+      "reason": "SIGNAL_EXIT",
+      "time": 1783127700
+    },
+    {
+      "sym": "BCH_USDT",
+      "pnl": 57.37238101072739,
+      "entry": 218.71745199999998,
+      "exit": 236.675292,
+      "had_tp1": true,
+      "pnl_pct": 5.561643117521756,
+      "reason": "SIGNAL_EXIT",
+      "time": 1783244700
+    },
+    {
+      "sym": "LIT_USDT",
+      "pnl": 16.951998524800267,
+      "entry": 2.1775706799999996,
+      "exit": 2.2146138,
+      "had_tp1": false,
+      "pnl_pct": 1.645185744786035,
+      "reason": "SIGNAL_EXIT",
+      "time": 1783224900
+    },
+    {
+      "sym": "BTC_USDT",
+      "pnl": 9.264324850926688,
+      "entry": 62588.0252,
+      "exit": 63173.620440000006,
+      "had_tp1": false,
+      "pnl_pct": 0.880120034140348,
+      "reason": "SIGNAL_EXIT",
+      "time": 1783307700
+    },
+    {
+      "sym": "BCH_USDT",
+      "pnl": -24.126572460782548,
+      "entry": 246.22845199999998,
+      "exit": 241.343424,
+      "had_tp1": false,
+      "pnl_pct": -2.0378501519393777,
+      "reason": "SIGNAL_EXIT",
+      "time": 1783296900
+    },
+    {
+      "sym": "BTW_USDT",
+      "pnl": 43.64946866967452,
+      "entry": 0.068567416,
+      "exit": 0.07217271936000001,
+      "had_tp1": true,
+      "pnl_pct": 4.233758672051313,
+      "reason": "TRAIL_STOP",
+      "time": 1783298700
+    },
+    {
+      "sym": "LIT_USDT",
+      "pnl": 90.44291725329487,
+      "entry": 2.2971184799999995,
+      "exit": 2.5863650400000004,
+      "had_tp1": true,
+      "pnl_pct": 7.532095528241678,
+      "reason": "SIGNAL_EXIT",
+      "time": 1783325700
+    },
+    {
+      "sym": "MYX_USDT",
+      "pnl": -47.961401497077574,
+      "entry": 0.08883552,
+      "exit": 0.08565772320000001,
+      "had_tp1": false,
+      "pnl_pct": -3.630201689324263,
+      "reason": "STOP_LOSS",
+      "time": 1783641600
+    },
+    {
+      "sym": "HYPE_USDT",
+      "pnl": -43.913014127581526,
+      "entry": 71.69066480000001,
+      "exit": 69.126168468,
+      "had_tp1": false,
+      "pnl_pct": -3.6302016893242772,
+      "reason": "STOP_LOSS",
+      "time": 1783900800
+    },
+    {
+      "sym": "ORDI_USDT",
+      "pnl": 36.20199864841557,
+      "entry": 3.5634247999999995,
+      "exit": 3.6495395999999998,
+      "had_tp1": true,
+      "pnl_pct": 2.9558267256525235,
+      "reason": "SIGNAL_EXIT",
+      "time": 1784173500
+    },
+    {
+      "sym": "MYX_USDT",
+      "pnl": -46.13501130627742,
+      "entry": 0.0810324,
+      "exit": 0.078133734,
+      "had_tp1": false,
+      "pnl_pct": -3.63020168932428,
+      "reason": "STOP_LOSS",
+      "time": 1784160000
+    },
+    {
+      "sym": "BTC_USDT",
+      "pnl": -4.326804006145731,
+      "entry": 64695.46784,
+      "exit": 64500.189600000005,
+      "had_tp1": false,
+      "pnl_pct": -0.35667621239044794,
+      "reason": "SIGNAL_EXIT",
+      "time": 1784508300
+    },
+    {
+      "sym": "BTC_USDT",
+      "pnl": 20.83029853110274,
+      "entry": 64997.28852,
+      "exit": 66154.5276,
+      "had_tp1": false,
+      "pnl_pct": 1.7244628435155518,
+      "reason": "SIGNAL_EXIT",
+      "time": 1784655900
+    },
+    {
+      "sym": "BCH_USDT",
+      "pnl": -34.758422694606864,
+      "entry": 241.21644799999999,
+      "exit": 234.26419182600003,
+      "had_tp1": false,
+      "pnl_pct": -2.935579865393033,
+      "reason": "STOP_LOSS",
+      "time": 1784592000
+    },
+    {
+      "sym": "PONS_USDT",
+      "pnl": 214.69975788418597,
+      "entry": 0.031807718,
+      "exit": 0.043222704,
+      "had_tp1": true,
+      "pnl_pct": 18.009421654677247,
+      "reason": "TRAIL_STOP",
+      "time": 1784681100
+    },
+    {
+      "sym": "ETH_USDT",
+      "pnl": -24.632515755548596,
+      "entry": 1937.764796,
+      "exit": 1899.964340148,
+      "had_tp1": false,
+      "pnl_pct": -2.004651767813482,
+      "reason": "STOP_LOSS",
+      "time": 1784810700
+    },
+    {
+      "sym": "EIGEN_USDT",
+      "pnl": -34.25944063041859,
+      "entry": 0.24619844,
+      "exit": 0.23964395406000005,
+      "had_tp1": false,
+      "pnl_pct": -2.7158133555732276,
+      "reason": "STOP_LOSS",
+      "time": 1784764800
+    },
+    {
+      "sym": "AKE_USDT",
+      "pnl": 267.1962624440161,
+      "entry": 0.00227260868,
+      "exit": 0.00315153888,
+      "had_tp1": true,
+      "pnl_pct": 19.26309530099569,
+      "reason": "SIGNAL_EXIT",
+      "time": 1785027600
+    },
+    {
+      "sym": "ADA_USDT",
+      "pnl": 22.8784862138939,
+      "entry": 0.1785714,
+      "exit": 0.1792362768,
+      "had_tp1": true,
+      "pnl_pct": 2.036398078468611,
+      "reason": "TRAIL_STOP",
+      "time": 1785283200
+    },
+    {
+      "sym": "BTW_USDT",
+      "pnl": 126.26816894739756,
+      "entry": 0.077671056,
+      "exit": 0.08785244496000001,
+      "had_tp1": true,
+      "pnl_pct": 7.7644515907276945,
+      "reason": "TRAIL_STOP",
+      "time": 1785288600
+    },
+    {
+      "sym": "BNB_USDT",
+      "pnl": -36.16110850570514,
+      "entry": 586.1343599999999,
+      "exit": 570.4144929,
+      "had_tp1": false,
+      "pnl_pct": -2.735481173820774,
+      "reason": "STOP_LOSS",
+      "time": 1785290400
+    },
+    {
+      "sym": "AVAX_USDT",
+      "pnl": 64.6330507904519,
+      "entry": 6.4715876,
+      "exit": 6.7742892,
+      "had_tp1": true,
+      "pnl_pct": 3.9726105467580237,
+      "reason": "SIGNAL_EXIT",
+      "time": 1785831300
+    },
+    {
+      "sym": "BTW_USDT",
+      "pnl": 34.881360052548466,
+      "entry": 0.10374148,
+      "exit": 0.104011083358224,
+      "had_tp1": true,
+      "pnl_pct": 1.985822929699995,
+      "reason": "TRAIL_STOP",
+      "time": 1785803400
+    },
+    {
+      "sym": "NIL_USDT",
+      "pnl": 35.426393665346104,
+      "entry": 0.034893952,
+      "exit": 0.034984634402457596,
+      "had_tp1": true,
+      "pnl_pct": 1.985822929699995,
+      "reason": "TRAIL_STOP",
+      "time": 1785895200
+    },
+    {
+      "sym": "BTW_USDT",
+      "pnl": -66.03320789864576,
+      "entry": 0.13797516799999998,
+      "exit": 0.13303956288,
+      "had_tp1": false,
+      "pnl_pct": -3.6302016893242652,
+      "reason": "STOP_LOSS",
+      "time": 1785888900
+    },
+    {
+      "sym": "TAKE_USDT",
+      "pnl": 859.1503270159395,
+      "entry": 0.022779108,
+      "exit": 0.04715872896,
+      "had_tp1": true,
+      "pnl_pct": 50.004256626758384,
+      "reason": "TRAIL_STOP",
+      "time": 1785911400
+    },
+    {
+      "sym": "SYN_USDT",
+      "pnl": 370.78118308577467,
+      "entry": 0.10454179999999999,
+      "exit": 0.13242700799999998,
+      "had_tp1": true,
+      "pnl_pct": 13.865522532338732,
+      "reason": "TRAIL_STOP",
+      "time": 1785980700
+    },
+    {
+      "sym": "BTC_USDT",
+      "pnl": 0.7579112149202256,
+      "entry": 64911.25412,
+      "exit": 64965.40344,
+      "had_tp1": false,
+      "pnl_pct": 0.0283746606928199,
+      "reason": "SIGNAL_EXIT",
+      "time": 1786215600
+    },
+    {
+      "sym": "MUBARAK_USDT",
+      "pnl": 53.073175312440675,
+      "entry": 0.013625448,
+      "exit": 0.013660857814262399,
+      "had_tp1": true,
+      "pnl_pct": 1.9858229296999954,
+      "reason": "TRAIL_STOP",
+      "time": 1786156200
+    },
+    {
+      "sym": "SOL_USDT",
+      "pnl": 92.61226888546432,
+      "entry": 74.819916,
+      "exit": 76.75928400000001,
+      "had_tp1": true,
+      "pnl_pct": 3.034721236200458,
+      "reason": "SIGNAL_EXIT",
+      "time": 1786315500
+    },
+    {
+      "sym": "PHA_USDT",
+      "pnl": 208.45598471743162,
+      "entry": 0.021418563999999998,
+      "exit": 0.023780484,
+      "had_tp1": true,
+      "pnl_pct": 6.828561441157538,
+      "reason": "SIGNAL_EXIT",
+      "time": 1786286700
+    },
+    {
+      "sym": "MUBARAK_USDT",
+      "pnl": 276.25566593701,
+      "entry": 0.015016004,
+      "exit": 0.017362652160000002,
+      "had_tp1": true,
+      "pnl_pct": 8.897514741192468,
+      "reason": "TRAIL_STOP",
+      "time": 1786255200
+    },
+    {
+      "sym": "WLD_USDT",
+      "pnl": 111.90817393667797,
+      "entry": 0.34613839999999996,
+      "exit": 0.35505792,
+      "had_tp1": true,
+      "pnl_pct": 3.027892819314474,
+      "reason": "SIGNAL_EXIT",
+      "time": 1787194800
+    },
+    {
+      "sym": "ENA_USDT",
+      "pnl": 16.464027846004445,
+      "entry": 0.09149658399999999,
+      "exit": 0.092632932,
+      "had_tp1": false,
+      "pnl_pct": 1.1862736726870693,
+      "reason": "SIGNAL_EXIT",
+      "time": 1787196600
+    },
+    {
+      "sym": "ENA_USDT",
+      "pnl": 372.01937889712093,
+      "entry": 0.113355324,
+      "exit": 0.13316271360000004,
+      "had_tp1": true,
+      "pnl_pct": 9.727789583470436,
+      "reason": "TRAIL_STOP",
+      "time": 1787302800
+    },
+    {
+      "sym": "PENGU_USDT",
+      "pnl": 202.04035247588683,
+      "entry": 0.0066786703999999995,
+      "exit": 0.0073390632,
+      "had_tp1": true,
+      "pnl_pct": 6.316133505242899,
+      "reason": "SIGNAL_EXIT",
+      "time": 1787303700
+    },
+    {
+      "sym": "ORDI_USDT",
+      "pnl": 395.0357701932078,
+      "entry": 3.5504195999999997,
+      "exit": 4.316752608000001,
+      "had_tp1": true,
+      "pnl_pct": 11.576531479068146,
+      "reason": "TRAIL_STOP",
+      "time": 1787311800
+    },
+    {
+      "sym": "PENGU_USDT",
+      "pnl": 374.12502096956496,
+      "entry": 0.0075450168,
+      "exit": 0.008653737120000001,
+      "had_tp1": true,
+      "pnl_pct": 8.477935622561237,
+      "reason": "TRAIL_STOP",
+      "time": 1787374800
+    },
+    {
+      "sym": "GALA_USDT",
+      "pnl": 719.8036566418486,
+      "entry": 0.0016226487999999998,
+      "exit": 0.002094162,
+      "had_tp1": true,
+      "pnl_pct": 14.93795781618488,
+      "reason": "SIGNAL_EXIT",
+      "time": 1787361300
+    },
+    {
+      "sym": "DASH_USDT",
+      "pnl": 103.31201764498968,
+      "entry": 41.0164,
+      "exit": 41.12299342031999,
+      "had_tp1": true,
+      "pnl_pct": 1.9858229296999894,
+      "reason": "TRAIL_STOP",
+      "time": 1787450400
+    },
+    {
+      "sym": "BTC_USDT",
+      "pnl": -3.9883165657872777,
+      "entry": 77192.06448,
+      "exit": 77182.71456000001,
+      "had_tp1": false,
+      "pnl_pct": -0.06710587850829469,
+      "reason": "SIGNAL_EXIT",
+      "time": 1787531400
+    },
+    {
+      "sym": "XPL_USDT",
+      "pnl": 330.1676623264993,
+      "entry": 0.088555408,
+      "exit": 0.10032985200000001,
+      "had_tp1": true,
+      "pnl_pct": 7.848909887386887,
+      "reason": "SIGNAL_EXIT",
+      "time": 1787552100
+    },
+    {
+      "sym": "TRUMPOFFICIAL_USDT",
+      "pnl": -219.50730285808507,
+      "entry": 2.7000795999999996,
+      "exit": 2.603493186,
+      "had_tp1": false,
+      "pnl_pct": -3.63020168932425,
+      "reason": "STOP_LOSS",
+      "time": 1787529600
+    },
+    {
+      "sym": "EIGEN_USDT",
+      "pnl": -40.821993645039484,
+      "entry": 0.23689472,
+      "exit": 0.22986256818,
+      "had_tp1": false,
+      "pnl_pct": -3.0218386600169898,
+      "reason": "STOP_LOSS",
+      "time": 1787529600
+    },
+    {
+      "sym": "BTC_USDT",
+      "pnl": 64.86453749372109,
+      "entry": 78742.78452,
+      "exit": 79632.33432,
+      "had_tp1": false,
+      "pnl_pct": 1.0740692258719646,
+      "reason": "SIGNAL_EXIT",
+      "time": 1787643900
+    },
+    {
+      "sym": "UAI_USDT",
+      "pnl": -221.46974819045454,
+      "entry": 0.35174064,
+      "exit": 0.3391582824,
+      "had_tp1": false,
+      "pnl_pct": -3.6302016893242652,
+      "reason": "STOP_LOSS",
+      "time": 1787620500
+    },
+    {
+      "sym": "LIT_USDT",
+      "pnl": 153.09913190754833,
+      "entry": 3.5876344799999997,
+      "exit": 3.6372445200000003,
+      "had_tp1": true,
+      "pnl_pct": 2.4908618954694353,
+      "reason": "SIGNAL_EXIT",
+      "time": 1787882400
+    },
+    {
+      "sym": "ENA_USDT",
+      "pnl": -215.34211173666432,
+      "entry": 0.174729864,
+      "exit": 0.16847948124,
+      "had_tp1": false,
+      "pnl_pct": -3.6302016893242737,
+      "reason": "STOP_LOSS",
+      "time": 1788480000
+    },
+    {
+      "sym": "RAY_USDT",
+      "pnl": 275.2998326327485,
+      "entry": 0.7097838,
+      "exit": 1.102178952,
+      "had_tp1": true,
+      "pnl_pct": 26.732949219733893,
+      "reason": "TRAIL_STOP",
+      "time": 1788676200
+    },
+    {
+      "sym": "INJ_USDT",
+      "pnl": -223.77708353729787,
+      "entry": 5.9713876,
+      "exit": 5.757780966,
+      "had_tp1": false,
+      "pnl_pct": -3.6302016893242626,
+      "reason": "STOP_LOSS",
+      "time": 1788739200
+    },
+    {
+      "sym": "LIT_USDT",
+      "pnl": -212.75928122030078,
+      "entry": 4.42897088,
+      "exit": 4.270539100800001,
+      "had_tp1": false,
+      "pnl_pct": -3.630201689324247,
+      "reason": "STOP_LOSS",
+      "time": 1789481700
+    },
+    {
+      "sym": "INJ_USDT",
+      "pnl": 1003.7625025813643,
+      "entry": 5.552219999999999,
+      "exit": 7.3930416,
+      "had_tp1": true,
+      "pnl_pct": 16.780348158479853,
+      "reason": "SIGNAL_EXIT",
+      "time": 1789830000
+    },
+    {
+      "sym": "INJ_USDT",
+      "pnl": 134.88645831209,
+      "entry": 7.8071216,
+      "exit": 7.8274107476140795,
+      "had_tp1": true,
+      "pnl_pct": 1.9858229296999934,
+      "reason": "TRAIL_STOP",
+      "time": 1789871400
+    },
+    {
+      "sym": "LDO_USDT",
+      "pnl": 126.63355274734965,
+      "entry": 0.40016,
+      "exit": 0.401199935808,
+      "had_tp1": true,
+      "pnl_pct": 1.9858229296999923,
+      "reason": "TRAIL_STOP",
+      "time": 1789898400
+    },
+    {
+      "sym": "NIL_USDT",
+      "pnl": 1020.7625239633882,
+      "entry": 0.053681464,
+      "exit": 0.06903677424,
+      "had_tp1": true,
+      "pnl_pct": 14.733883176165794,
+      "reason": "TRAIL_STOP",
+      "time": 1789972200
+    },
+    {
+      "sym": "WLD_USDT",
+      "pnl": 457.57911056969726,
+      "entry": 0.36694672,
+      "exit": 0.4497,
+      "had_tp1": true,
+      "pnl_pct": 12.01169291792606,
+      "reason": "EOD",
+      "time": 1790332200
+    },
+    {
+      "sym": "KAS_USDT",
+      "pnl": 2396.015127124435,
+      "entry": 0.02981192,
+      "exit": 0.04157,
+      "had_tp1": false,
+      "pnl_pct": 39.36417547075132,
+      "reason": "EOD",
+      "time": 1790333100
+    },
+    {
+      "sym": "CRV_USDT",
+      "pnl": -599.6510417313519,
+      "entry": 0.38145251999999996,
+      "exit": 0.3444,
+      "had_tp1": false,
+      "pnl_pct": -9.763191497594505,
+      "reason": "EOD",
+      "time": 1790333100
+    },
+    {
+      "sym": "RIVER_USDT",
+      "pnl": -37.404478423220475,
+      "entry": 1.2615043999999997,
+      "exit": 1.254,
+      "had_tp1": false,
+      "pnl_pct": -0.6495498549192334,
+      "reason": "EOD",
+      "time": 1790333100
+    },
+    {
+      "sym": "LDO_USDT",
+      "pnl": 609.1803704064087,
+      "entry": 0.40986388,
+      "exit": 0.4455,
+      "had_tp1": false,
+      "pnl_pct": 8.634841157508193,
+      "reason": "EOD",
+      "time": 1790333100
+    },
+    {
+      "sym": "HBAR_USDT",
+      "pnl": 281.51668137970984,
+      "entry": 0.090476176,
+      "exit": 0.09367,
+      "had_tp1": false,
+      "pnl_pct": 3.4730750556920063,
+      "reason": "EOD",
+      "time": 1790333100
     }
   ]
 }

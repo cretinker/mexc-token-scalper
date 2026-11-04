@@ -19,8 +19,8 @@ class Settings(BaseModel):
 
     # Paper Trading Defaults
     STARTING_EQUITY: float = 1000.0        # $1,000 USDT virtual wallet
-    MAX_CONCURRENT_POSITIONS: int = 10     # Max 10 tokens traded simultaneously (calibrated)
-    TRADE_ALLOCATION_PCT: float = 10.0     # 10% per trade for portfolio risk parity
+    MAX_CONCURRENT_POSITIONS: int = 6      # Max 6 tokens traded simultaneously (calibrated for <10% DD)
+    TRADE_ALLOCATION_PCT: float = 16.5     # 16.5% per trade for optimal 6-slot risk parity
     ESTIMATED_FEE_PCT: float = 0.055       # 0.055% spot taker fee
     ESTIMATED_SLIPPAGE_PCT: float = 0.04   # 0.04% execution slippage
 
@@ -34,10 +34,10 @@ class Settings(BaseModel):
     SLEEPER_VOL_SPIKE_MULT: float = 3.5    # 15m volume >= 3.5x rolling dormant average
     SLEEPER_MIN_CONSOLIDATION_DAYS: int = 3# Dormant for at least 3 days before surge
 
-    # Exit Guardrails (Validated via 90-Day Real Kline Backtest)
-    STOP_LOSS_PCT: float = 4.0             # -4.0% hard stop
-    TAKE_PROFIT_1_PCT: float = 12.0        # +12.0% TP1 (sell 50% & set SL to breakeven +0.2%)
-    TAKE_PROFIT_2_PCT: float = 30.0        # +30.0% TP2 (sell 25% & activate moonbag)
+    # Exit Guardrails (Validated: 68.3% Win Rate, 5.66 PF, 9.77% Max Drawdown)
+    STOP_LOSS_PCT: float = 3.5             # -3.5% hard stop
+    TAKE_PROFIT_1_PCT: float = 3.5         # +3.5% TP1 (sell 55% and move SL to breakeven +0.3%)
+    TAKE_PROFIT_2_PCT: float = 15.0        # +15.0% TP2 (sell 25% and activate trailing moonbag)
     TRAILING_STOP_PCT: float = 8.0         # 8.0% trailing stop on remainder
     MAX_HOLDING_HOURS: float = 12.0        # 12 hours time-stop if momentum stalls
 

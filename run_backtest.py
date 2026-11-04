@@ -17,9 +17,13 @@ def main():
 
     engine = BacktestEngine(
         starting_equity=1000.0,
-        risk_pct=6.50,
-        per_pos_cap_x=5.0,
-        max_positions=10,
+        risk_pct=6.80,
+        per_pos_cap_x=6.2,
+        max_positions=6,
+        tp1_pct=0.035,
+        tp1_portion=0.55,
+        runner_be=0.003,
+        trail_pct=0.08,
         min_notional=25.0,
         fee_pct=0.055,
         slippage_pct=0.04

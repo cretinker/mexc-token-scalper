@@ -10,12 +10,12 @@ logger = logging.getLogger(__name__)
 
 class PositionGuard:
     """
-    Dynamic Trade Manager & Exit Guard for Open Positions.
+    Dynamic Trade Manager and Exit Guard for Open Positions.
     Executes Stepped Ladder Exits:
-      * TP1 (+12%): Sells 50% of position and moves Stop Loss to Break-Even (+0.2% fee cushion).
-      * TP2 (+30%): Sells 25% of position and activates trailing moonbag.
-      * Trailing Stop (8% from peak): Protects remaining 25% moonbag.
-      * Hard Stop (-4%): Protects capital on failed breakouts.
+      * TP1 (+3.5%): Sells 55% of position and moves Stop Loss to Breakeven (+0.3% fee cushion).
+      * TP2 (+15.0%): Sells 25% of position and activates trailing moonbag.
+      * Trailing Stop (8% from peak): Protects remaining 20% moonbag.
+      * Hard Stop (-3.5%): Protects capital on failed breakouts.
       * Time-Stop (12h stagnant): Frees trapped capital if momentum dries up.
     """
 
@@ -69,22 +69,22 @@ class PositionGuard:
             self._close_remaining(pos, exit_price, reason="STOP_LOSS" if not tp1_hit else "TRAIL_STOP")
             return {"symbol": symbol, "event": "CLOSED_STOP", "price": exit_price, "pnl_pct": pnl_pct}
 
-        # ── 2. Check TP1 (+18%) ──
+        # ── 2. Check TP1 (+3.5%) ──
         if live_price >= tp1 and not tp1_hit and remaining_units > 0:
-            units_to_sell = pos["initial_units"] * 0.50
+            units_to_sell = pos["initial_units"] * 0.55
             actual_sell = min(remaining_units, units_to_sell)
             exit_price = live_price * (1.0 - self.slippage_pct / 100.0)
 
             self._execute_partial_sell(pos, actual_sell, exit_price, reason="TP1_HIT", step="TP1")
 
             # Move Stop Loss to Break-Even (Entry price + fee buffer)
-            be_stop = entry_price * 1.002
+            be_stop = entry_price * 1.003
             pos_updates["stop_loss"] = be_stop
             pos_updates["tp1_hit"] = 1
             pos_updates["remaining_units"] = remaining_units - actual_sell
 
             db.update_position(pos_id, pos_updates)
-            logger.info(f"[{symbol}] TP1 Hit at ${exit_price:.6f} (+{pnl_pct:.2f}%). Sold 50%. SL moved to Breakeven.")
+            logger.info(f"[{symbol}] TP1 Hit at ${exit_price:.6f} (+{pnl_pct:.2f}%). Sold 55%. SL moved to Breakeven.")
             return {"symbol": symbol, "event": "TP1_HIT", "price": exit_price, "pnl_pct": pnl_pct}
 
         # ── 3. Check TP2 (+45%) ──
