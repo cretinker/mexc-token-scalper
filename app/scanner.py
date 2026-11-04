@@ -61,6 +61,14 @@ class MexcScanner:
             if base in {"BTC", "ETH", "USDC", "DAI", "EUR", "FDUSD", "TUSD"} or base.isdigit() or len(base) <= 1:
                 continue
 
+            # Check if symbol is in post-exit cooldown
+            in_cooldown, rem_sec = db.is_in_cooldown(symbol)
+            if in_cooldown:
+                continue
+
+            # High price and low price from 24h ticker
+            high_24h = float(t.get("highPrice", 0.0))
+
             # Check Playbook 1: Sleeper Revival (Volume anomaly relative to past 24h)
             vol_mult = self._estimate_volume_spike_multiple(symbol, vol_24h)
             is_sleeper = vol_mult >= settings.SLEEPER_VOL_SPIKE_MULT and (3.0 <= change_24h <= 45.0)
@@ -68,14 +76,34 @@ class MexcScanner:
             # Check Playbook 2: Penny Momentum (< $0.05 with positive trend)
             is_penny = price <= self.penny_max_price and (8.0 <= change_24h <= 40.0)
 
-            # Determine play type
+            # Check Playbook 3: New Listing momentum
+            is_new_listing = change_24h > 15.0 and vol_24h > 150000
+
+            # Check Playbook 4: Exhaustion Short (Overextended parabolic pump dropping from 24h peak)
+            is_exhaustion_short = (
+                change_24h >= 25.0
+                and vol_24h >= 40000.0
+                and high_24h > 0
+                and price <= high_24h * 0.94
+                and price >= high_24h * 0.82
+            )
+
+            # Determine play type and side
             play_type = None
-            if is_sleeper:
+            side = "LONG"
+
+            if is_exhaustion_short:
+                play_type = "EXHAUSTION_SHORT"
+                side = "SHORT"
+            elif is_sleeper:
                 play_type = "SLEEPER_REVIVAL"
+                side = "LONG"
             elif is_penny:
                 play_type = "PENNY_MOMENTUM"
-            elif change_24h > 15.0 and vol_24h > 150000:
+                side = "LONG"
+            elif is_new_listing:
                 play_type = "NEW_LISTING"
+                side = "LONG"
 
             if not play_type:
                 continue
@@ -94,6 +122,7 @@ class MexcScanner:
             if filter_res.passed:
                 signal_data = {
                     "symbol": symbol,
+                    "side": side,
                     "play_type": play_type,
                     "score": filter_res.score,
                     "rs_score": rs_score,

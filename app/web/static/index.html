@@ -210,6 +210,8 @@
     .tag-sleeper { background: rgba(255, 171, 0, 0.15); color: var(--yellow); border: 1px solid rgba(255, 171, 0, 0.3); }
     .tag-penny { background: rgba(0, 230, 118, 0.15); color: var(--green); border: 1px solid rgba(0, 230, 118, 0.3); }
     .tag-listing { background: rgba(41, 98, 255, 0.15); color: #64b5f6; border: 1px solid rgba(41, 98, 255, 0.3); }
+    .tag-short { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .tag-long { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
 
     .btn-close-sm {
       background: #2a1b24;
@@ -276,14 +278,15 @@
       <!-- Active Paper Positions -->
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">Active Positions & Stepped Exits</div>
-          <span style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Target: TP1 +3.5% (Sell 55% & BE) | TP2 +15% | SL -3.5% | Trail 8%</span>
+          <div class="panel-title">Active Positions & Dynamic Exits</div>
+          <span style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Dynamic DOM Walls | Progressive Ratchet | L2 Absorption Defense | Re-entry Cooldown</span>
         </div>
         <div class="table-container">
           <table>
             <thead>
               <tr>
                 <th>Symbol</th>
+                <th>Side</th>
                 <th>Play</th>
                 <th>Entry</th>
                 <th>Current</th>
@@ -295,7 +298,7 @@
             </thead>
             <tbody id="positions-body">
               <tr>
-                <td colspan="8" class="empty-state">No open positions. Scanner is evaluating market signals...</td>
+                <td colspan="9" class="empty-state">No open positions. Scanner is evaluating market signals...</td>
               </tr>
             </tbody>
           </table>
@@ -394,15 +397,17 @@
       // Render Positions
       const posBody = document.getElementById('positions-body');
       if (data.open_positions.length === 0) {
-        posBody.innerHTML = '<tr><td colspan="8" class="empty-state">No open positions. Scanner is evaluating market signals...</td></tr>';
+        posBody.innerHTML = '<tr><td colspan="9" class="empty-state">No open positions. Scanner is evaluating market signals...</td></tr>';
       } else {
         posBody.innerHTML = data.open_positions.map(p => {
           const pnlClass = p.pnl_pct >= 0 ? 'val-green' : 'val-red';
           const pnlSign = p.pnl_pct >= 0 ? '+' : '';
-          const tagClass = p.play_type === 'SLEEPER_REVIVAL' ? 'tag-sleeper' : (p.play_type === 'PENNY_MOMENTUM' ? 'tag-penny' : 'tag-listing');
+          const tagClass = p.play_type === 'SLEEPER_REVIVAL' ? 'tag-sleeper' : (p.play_type === 'EXHAUSTION_SHORT' ? 'tag-short' : (p.play_type === 'PENNY_MOMENTUM' ? 'tag-penny' : 'tag-listing'));
+          const sideClass = (p.side === 'SHORT') ? 'tag-short' : 'tag-long';
           return `
             <tr>
               <td><strong>${p.symbol}</strong></td>
+              <td><span class="tag ${sideClass}">${p.side || 'LONG'}</span></td>
               <td><span class="tag ${tagClass}">${p.play_type}</span></td>
               <td>$${p.entry_price < 0.01 ? p.entry_price.toFixed(7) : p.entry_price.toFixed(4)}</td>
               <td>$${p.current_price < 0.01 ? p.current_price.toFixed(7) : p.current_price.toFixed(4)}</td>
@@ -422,11 +427,12 @@
         sigBody.innerHTML = '<tr><td colspan="7" class="empty-state">Waiting for next scan cycle...</td></tr>';
       } else {
         sigBody.innerHTML = data.signals.map(s => {
-          const tagClass = s.play_type === 'SLEEPER_REVIVAL' ? 'tag-sleeper' : (s.play_type === 'PENNY_MOMENTUM' ? 'tag-penny' : 'tag-listing');
+          const tagClass = s.play_type === 'SLEEPER_REVIVAL' ? 'tag-sleeper' : (s.play_type === 'EXHAUSTION_SHORT' ? 'tag-short' : (s.play_type === 'PENNY_MOMENTUM' ? 'tag-penny' : 'tag-listing'));
+          const sideTag = s.side === 'SHORT' ? '<span class="tag tag-short">SHORT</span> ' : '<span class="tag tag-long">LONG</span> ';
           return `
             <tr>
               <td><strong>${s.symbol}</strong></td>
-              <td><span class="tag ${tagClass}">${s.play_type}</span></td>
+              <td>${sideTag}<span class="tag ${tagClass}">${s.play_type}</span></td>
               <td><strong>${s.score}</strong></td>
               <td>$${s.price < 0.01 ? s.price.toFixed(7) : s.price.toFixed(4)}</td>
               <td class="${s.change_24h >= 0 ? 'val-green' : 'val-red'}">${s.change_24h >= 0 ? '+' : ''}${s.change_24h.toFixed(1)}%</td>
@@ -445,12 +451,14 @@
         tradeBody.innerHTML = data.trades.map(t => {
           const date = new Date(t.timestamp * 1000).toLocaleTimeString();
           const pnlClass = t.pnl >= 0 ? 'val-green' : 'val-red';
-          const pnlText = t.side.startsWith('SELL') ? `${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)} (${t.pnl_pct.toFixed(1)}%)` : '--';
+          const isExit = t.side.startsWith('SELL') || t.side.startsWith('COVER');
+          const pnlText = isExit ? `${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)} (${t.pnl_pct.toFixed(1)}%)` : '--';
+          const sideClass = t.side.includes('SHORT') ? 'tag-short' : (t.side.startsWith('BUY') ? 'tag-long' : 'tag-penny');
           return `
             <tr>
               <td style="color:var(--text-muted)">${date}</td>
               <td><strong>${t.symbol}</strong></td>
-              <td><span class="tag ${t.side === 'BUY' ? 'tag-listing' : 'tag-sleeper'}">${t.side}</span></td>
+              <td><span class="tag ${sideClass}">${t.side}</span></td>
               <td>$${t.price < 0.01 ? t.price.toFixed(7) : t.price.toFixed(4)}</td>
               <td>${Math.round(t.units).toLocaleString()}</td>
               <td>$${t.notional.toFixed(2)}</td>

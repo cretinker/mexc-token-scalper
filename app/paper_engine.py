@@ -4,6 +4,7 @@ from typing import Dict, Any, Optional
 from app.config import settings
 from app.database import db
 from app.mexc_client import mexc_client
+from app.dom_engine import dom_engine
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +34,20 @@ class PaperEngine:
             rem_units = p["remaining_units"]
             cur_price = p["current_price"]
             entry_price = p["entry_price"]
-            pos_value = rem_units * cur_price
-            pos_cost = rem_units * entry_price
-            open_equity += pos_value
-            unrealized_pnl += (pos_value - pos_cost)
+            side = p.get("side", "LONG")
+
+            if side == "SHORT":
+                # For short: profit when current price is lower than entry
+                pos_cost = rem_units * entry_price
+                pos_val = rem_units * cur_price
+                pnl = pos_cost - pos_val
+                open_equity += (pos_cost + pnl)
+                unrealized_pnl += pnl
+            else:
+                pos_value = rem_units * cur_price
+                pos_cost = rem_units * entry_price
+                open_equity += pos_value
+                unrealized_pnl += (pos_value - pos_cost)
 
         cash = pf["cash"]
         total_equity = cash + open_equity
@@ -66,6 +77,11 @@ class PaperEngine:
 
     def can_open_trade(self, symbol: str) -> tuple[bool, str]:
         """Validates portfolio rules before executing a trade."""
+        # 1. Check if symbol is in post-exit cooldown
+        in_cooldown, rem_sec = db.is_in_cooldown(symbol)
+        if in_cooldown:
+            return False, f"Symbol {symbol} in cooldown ({int(rem_sec)}s remaining)"
+
         open_positions = db.get_open_positions()
         if len(open_positions) >= self.max_positions:
             return False, f"Max concurrent positions reached ({self.max_positions})"
@@ -83,20 +99,27 @@ class PaperEngine:
 
     def execute_buy(self, signal: Dict[str, Any]) -> Optional[int]:
         """
-        Executes a paper BUY order based on a detected signal.
+        Executes a paper order (LONG or SHORT) based on a detected signal.
+        Enforces DOM-anchored dynamic TP and dynamic SL.
         """
         symbol = signal["symbol"]
+        side = signal.get("side", "LONG").upper()
         can_trade, reason = self.can_open_trade(symbol)
         if not can_trade:
-            logger.info(f"Skipping buy on {symbol}: {reason}")
+            logger.info(f"Skipping {side} on {symbol}: {reason}")
             return None
 
         # Fetch latest book price to determine fill price
         book = mexc_client.fetch_book_ticker(symbol)
-        raw_ask = book["ask"] if book and book["ask"] > 0 else signal["price"]
+        if side == "SHORT":
+            raw_px = book["bid"] if book and book["bid"] > 0 else signal["price"]
+            fill_price = raw_px * (1.0 - self.slippage_pct / 100.0)
+        else:
+            raw_px = book["ask"] if book and book["ask"] > 0 else signal["price"]
+            fill_price = raw_px * (1.0 + self.slippage_pct / 100.0)
 
-        # Apply simulated slippage
-        fill_price = raw_ask * (1.0 + self.slippage_pct / 100.0)
+        if fill_price <= 0:
+            return None
 
         # Calculate position size
         pf = db.get_portfolio()
@@ -105,10 +128,33 @@ class PaperEngine:
         net_investment = desired_investment - fee
         units = net_investment / fill_price
 
-        # Exit levels
-        tp1 = fill_price * (1.0 + settings.TAKE_PROFIT_1_PCT / 100.0)
-        tp2 = fill_price * (1.0 + settings.TAKE_PROFIT_2_PCT / 100.0)
-        stop_loss = fill_price * (1.0 - settings.STOP_LOSS_PCT / 100.0)
+        # Consult DOM Engine for dynamic levels
+        dom_info = dom_engine.analyze_orderbook(symbol, fill_price, side=side)
+
+        if side == "SHORT":
+            # For SHORT: TP is below, SL is above
+            default_tp1 = fill_price * (1.0 - settings.TAKE_PROFIT_1_PCT / 100.0)
+            default_tp2 = fill_price * (1.0 - settings.TAKE_PROFIT_2_PCT / 100.0)
+            default_sl = fill_price * (1.0 + settings.STOP_LOSS_PCT / 100.0)
+
+            # Snap TP1 to DOM Bid Wall if available
+            tp1 = max(default_tp1, dom_info.get("dynamic_tp") or default_tp1)
+            tp2 = default_tp2
+            # Snap SL to DOM Ask Wall if available
+            stop_loss = min(default_sl, dom_info.get("dynamic_sl") or default_sl)
+            trade_action = "SELL_SHORT"
+        else:
+            # For LONG: TP is above, SL is below
+            default_tp1 = fill_price * (1.0 + settings.TAKE_PROFIT_1_PCT / 100.0)
+            default_tp2 = fill_price * (1.0 + settings.TAKE_PROFIT_2_PCT / 100.0)
+            default_sl = fill_price * (1.0 - settings.STOP_LOSS_PCT / 100.0)
+
+            # Snap TP1 to DOM Ask Wall if available
+            tp1 = min(default_tp1, dom_info.get("dynamic_tp") or default_tp1)
+            tp2 = default_tp2
+            # Snap SL to DOM Bid Wall if available
+            stop_loss = max(default_sl, dom_info.get("dynamic_sl") or default_sl)
+            trade_action = "BUY"
 
         # Deduct cash from portfolio
         new_cash = pf["cash"] - desired_investment
@@ -123,6 +169,7 @@ class PaperEngine:
         # Open position record
         pos_id = db.open_position({
             "symbol": symbol,
+            "side": side,
             "play_type": signal.get("play_type", "MOMENTUM"),
             "entry_price": fill_price,
             "units": units,
@@ -136,7 +183,7 @@ class PaperEngine:
         db.record_trade({
             "position_id": pos_id,
             "symbol": symbol,
-            "side": "BUY",
+            "side": trade_action,
             "price": fill_price,
             "units": units,
             "notional": desired_investment,
@@ -144,7 +191,7 @@ class PaperEngine:
             "reason": f"Signal {signal.get('play_type')} (Score {signal.get('score')})"
         })
 
-        logger.info(f"ENTERED POSITION: {symbol} at ${fill_price:.6f} (${desired_investment:.2f} allocated)")
+        logger.info(f"ENTERED {side}: {symbol} at ${fill_price:.6f} (${desired_investment:.2f} allocated, TP1: ${tp1:.6f}, SL: ${stop_loss:.6f})")
         return pos_id
 
     def close_manually(self, pos_id: int) -> bool:

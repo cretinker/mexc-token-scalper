@@ -49,13 +49,23 @@ def get_status() -> Dict[str, Any]:
     for p in open_positions:
         cur_p = p["current_price"]
         entry_p = p["entry_price"]
-        pnl_pct = ((cur_p - entry_p) / entry_p) * 100.0 if entry_p > 0 else 0.0
-        val = p["remaining_units"] * cur_p
-        cost = p["remaining_units"] * entry_p
+        side = p.get("side", "LONG").upper()
+
+        if side == "SHORT":
+            pnl_pct = ((entry_p - cur_p) / entry_p) * 100.0 if entry_p > 0 else 0.0
+            pnl_val = (entry_p - cur_p) * p["remaining_units"]
+            ratio = p["remaining_units"] / p["initial_units"] if p["initial_units"] > 0 else 1.0
+            val = p["invested_amount"] * ratio + pnl_val
+        else:
+            pnl_pct = ((cur_p - entry_p) / entry_p) * 100.0 if entry_p > 0 else 0.0
+            pnl_val = (cur_p - entry_p) * p["remaining_units"]
+            val = p["remaining_units"] * cur_p
+
         formatted_positions.append({
             **p,
+            "side": side,
             "current_value": round(val, 2),
-            "unrealized_pnl": round(val - cost, 2),
+            "unrealized_pnl": round(pnl_val, 2),
             "pnl_pct": round(pnl_pct, 2)
         })
 

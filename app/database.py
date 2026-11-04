@@ -91,6 +91,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS signals (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 symbol TEXT NOT NULL,
+                side TEXT NOT NULL DEFAULT 'LONG',
                 play_type TEXT NOT NULL,
                 score INTEGER NOT NULL,
                 price REAL NOT NULL,
@@ -103,6 +104,26 @@ class Database:
                 timestamp REAL NOT NULL
             )
             """)
+
+            # Cooldowns table to prevent instant re-entry after stops
+            c.execute("""
+            CREATE TABLE IF NOT EXISTS cooldowns (
+                symbol TEXT PRIMARY KEY,
+                cooldown_until REAL NOT NULL,
+                reason TEXT NOT NULL
+            )
+            """)
+
+            # Non-destructive migrations for existing SQLite databases
+            c.execute("PRAGMA table_info(positions)")
+            pos_cols = [col[1] for col in c.fetchall()]
+            if "side" not in pos_cols:
+                c.execute("ALTER TABLE positions ADD COLUMN side TEXT NOT NULL DEFAULT 'LONG'")
+
+            c.execute("PRAGMA table_info(signals)")
+            sig_cols = [col[1] for col in c.fetchall()]
+            if "side" not in sig_cols:
+                c.execute("ALTER TABLE signals ADD COLUMN side TEXT NOT NULL DEFAULT 'LONG'")
 
             conn.commit()
 
@@ -145,16 +166,17 @@ class Database:
 
     # --- Position Methods ---
     def open_position(self, pos_data: Dict[str, Any]) -> int:
+        side = pos_data.get("side", "LONG")
         with self._get_conn() as conn:
             c = conn.cursor()
             c.execute("""
             INSERT INTO positions (
-                symbol, play_type, entry_price, current_price, peak_price,
+                symbol, side, play_type, entry_price, current_price, peak_price,
                 initial_units, remaining_units, invested_amount, realized_pnl,
                 stop_loss, tp1, tp2, tp1_hit, tp2_hit, status, opened_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.0, ?, ?, ?, 0, 0, 'OPEN', ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0.0, ?, ?, ?, 0, 0, 'OPEN', ?, ?)
             """, (
-                pos_data["symbol"], pos_data["play_type"], pos_data["entry_price"],
+                pos_data["symbol"], side, pos_data["play_type"], pos_data["entry_price"],
                 pos_data["entry_price"], pos_data["entry_price"], pos_data["units"],
                 pos_data["units"], pos_data["invested_amount"], pos_data["stop_loss"],
                 pos_data["tp1"], pos_data["tp2"], time.time(), time.time()
@@ -215,15 +237,16 @@ class Database:
 
     # --- Signal Methods ---
     def record_signal(self, sig: Dict[str, Any]):
+        side = sig.get("side", "LONG")
         with self._get_conn() as conn:
             c = conn.cursor()
             c.execute("""
             INSERT INTO signals (
-                symbol, play_type, score, price, change_24h, volume_24h,
+                symbol, side, play_type, score, price, change_24h, volume_24h,
                 spike_multiple, spread_pct, reason, traded, timestamp
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                sig["symbol"], sig["play_type"], sig["score"], sig["price"],
+                sig["symbol"], side, sig["play_type"], sig["score"], sig["price"],
                 sig["change_24h"], sig["volume_24h"], sig["spike_multiple"],
                 sig["spread_pct"], sig["reason"], 1 if sig.get("traded") else 0, time.time()
             ))
@@ -234,6 +257,32 @@ class Database:
             c = conn.cursor()
             c.execute("SELECT * FROM signals ORDER BY timestamp DESC LIMIT ?", (limit,))
             return [dict(r) for r in c.fetchall()]
+
+    # --- Cooldown Methods ---
+    def set_cooldown(self, symbol: str, duration_seconds: float = 1800.0, reason: str = "STOP_LOSS"):
+        """Prevents buying the same symbol immediately after an exit or stop loss."""
+        with self._get_conn() as conn:
+            c = conn.cursor()
+            until = time.time() + duration_seconds
+            c.execute("""
+            INSERT INTO cooldowns (symbol, cooldown_until, reason)
+            VALUES (?, ?, ?)
+            ON CONFLICT(symbol) DO UPDATE SET cooldown_until = excluded.cooldown_until, reason = excluded.reason
+            """, (symbol, until, reason))
+            conn.commit()
+
+    def is_in_cooldown(self, symbol: str) -> tuple[bool, float]:
+        """Returns (True, remaining_seconds) if symbol is active in cooldown."""
+        with self._get_conn() as conn:
+            c = conn.cursor()
+            c.execute("SELECT cooldown_until FROM cooldowns WHERE symbol = ?", (symbol,))
+            row = c.fetchone()
+            if row:
+                until = row["cooldown_until"]
+                now = time.time()
+                if until > now:
+                    return True, until - now
+            return False, 0.0
 
 
 db = Database()
