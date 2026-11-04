@@ -259,12 +259,14 @@ class PaperEngine:
         pf = db.get_portfolio()
         equity = max(float(pf["total_equity"]), 0.0)
         stop_pct = abs(fill_price - stop_loss) / fill_price if fill_price > 0 else 1.0
-        open_risk = self._get_open_risk_usd()
-        max_open_risk = equity * (settings.MAX_OPEN_RISK_PCT / 100.0)
-        remaining_risk = max_open_risk - open_risk
         regime_multiplier = float(signal.get("regime_risk_multiplier", 1.0))
         per_trade_risk = equity * (settings.PER_TRADE_RISK_PCT / 100.0) * max(0.0, min(1.0, regime_multiplier))
-        risk_budget = min(per_trade_risk, max(0.0, remaining_risk))
+        risk_budget = per_trade_risk
+        if settings.ENABLE_AGGREGATE_OPEN_RISK:
+            open_risk = self._get_open_risk_usd()
+            max_open_risk = equity * (settings.MAX_OPEN_RISK_PCT / 100.0)
+            remaining_risk = max_open_risk - open_risk
+            risk_budget = min(per_trade_risk, max(0.0, remaining_risk))
         if stop_pct <= 0 or risk_budget <= 0:
             return None
 

@@ -24,7 +24,8 @@ class Settings(BaseModel):
     ESTIMATED_FEE_PCT: float = 0.055       # 0.055% spot taker fee
     ESTIMATED_SLIPPAGE_PCT: float = 0.04   # 0.04% execution slippage
     PER_TRADE_RISK_PCT: float = 0.75       # Maximum planned loss at the stop
-    MAX_OPEN_RISK_PCT: float = 2.0         # Aggregate planned loss across open trades
+    MAX_OPEN_RISK_PCT: float = 2.0         # Reserved for a later live-risk phase
+    ENABLE_AGGREGATE_OPEN_RISK: bool = False  # Observe more concurrent paper setups
     DAILY_LOSS_CAP_PCT: float = 3.0        # Stop opening new trades after this loss
     MAX_CONSECUTIVE_LOSSES: int = 2       # Pause after a short losing streak
     LOSS_PAUSE_MINUTES: int = 45
