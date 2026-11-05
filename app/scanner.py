@@ -43,7 +43,7 @@ class MexcScanner:
         )
         btc_change_24h = float(btc_ticker.get("priceChangePercent", 0.0)) if btc_ticker else 0.0
 
-        btc_candles = mexc_client.fetch_klines("BTCUSDT", interval="1h", limit=100)
+        btc_candles = mexc_client.fetch_klines("BTCUSDT", interval="60m", limit=100)
         btc_regime = compute_btc_regime(btc_candles)
         if settings.REQUIRE_BTC_REGIME and btc_regime is None:
             logger.warning("BTC regime unavailable; standing down rather than trading blind.")
